@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🌈 Snake Game</title>
+    <style>
+        body {
+            background: black;
+            color: yellow; /* ตัวหนังสือสีเหลืองมองเห็นชัด */
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            background: black;
+            display: block;
+            margin: auto;
+            border: 2px solid yellow;
+        }
+        h1, p {
+            text-shadow: 2px 2px 4px black; /* ทำให้เด่นขึ้น */
+        }
+    </style>
+</head>
+<body>
+    <h1>🌈 Snake Game</h1>
+    <p>Score: <span id="score">0</span> | Level: <span id="level">1</span></p>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const CELL = 20;
+
+        let snake = [{x:100, y:100}, {x:80, y:100}, {x:60, y:100}];
+        let direction = "RIGHT";
+        let food = {x: Math.floor(Math.random()*30)*CELL, y: Math.floor(Math.random()*20)*CELL};
+        let score = 0;
+        let level = 1;
+        let speed = 100; // initial interval in ms
+
+        const rainbowColors = ["red","orange","yellow","green","blue","indigo","violet"];
+
+        document.addEventListener("keydown", e => {
+            if(e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+            if(e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+            if(e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+            if(e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+        });
+
+        function draw(){
+            // วาดพื้นหลัง
+            ctx.fillStyle = "black";
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+
+            // วาดงูสีรุ้ง
+            snake.forEach((seg,i)=>{
+                ctx.fillStyle = rainbowColors[i % rainbowColors.length];
+                ctx.fillRect(seg.x, seg.y, CELL, CELL);
+            });
+
+            // วาดผลไม้
+            ctx.fillStyle = "red";
+            ctx.fillRect(food.x, food.y, CELL, CELL);
+        }
+
+        function update(){
+            let head = {...snake[0]};
+            if(direction==="UP") head.y -= CELL;
+            if(direction==="DOWN") head.y += CELL;
+            if(direction==="LEFT") head.x -= CELL;
+            if(direction==="RIGHT") head.x += CELL;
+
+            // ทะลุขอบ
+            head.x = (head.x + canvas.width) % canvas.width;
+            head.y = (head.y + canvas.height) % canvas.height;
+
+            // ชนตัวเอง
+            if(snake.some(seg => seg.x===head.x && seg.y===head.y)){
+                alert("Game Over! Score: "+score);
+                snake = [{x:100,y:100},{x:80,y:100},{x:60,y:100}];
+                direction = "RIGHT";
+                score = 0;
+                level = 1;
+                speed = 100;
+            }
+
+            snake.unshift(head);
+
+            // กินผลไม้
+            if(head.x===food.x && head.y===food.y){
+                score++;
+                if(score % 5 === 0){
+                    level++;
+                    speed = Math.max(50, speed-10); // ความเร็วเพิ่มขึ้น
+                    clearInterval(gameInterval);
+                    gameInterval = setInterval(gameLoop, speed);
+                }
+                food = {x: Math.floor(Math.random()*30)*CELL, y: Math.floor(Math.random()*20)*CELL};
+            } else {
+                snake.pop();
+            }
+
+            // อัปเดตคะแนนและเลเวล
+            document.getElementById("score").innerText = score;
+            document.getElementById("level").innerText = level;
+        }
+
+        function gameLoop(){
+            update();
+            draw();
+        }
+
+        let gameInterval = setInterval(gameLoop, speed);
+    </script>
+</body>
+</html>
